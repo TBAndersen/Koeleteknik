@@ -1,25 +1,50 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-
+import pandas as pd
 
 def show():
     st.title("Varmeberegning for madvare")
-
+   
     # -------------------------
     # Produktdata
+   
     # -------------------------
-    produkter = {
-        "Fjerkræ": {"Tc": -2.80, "c_foer": 3.32, "L": 247.00, "c_efter": 1.77},
-        "Får": {"Tc": -1.70, "c_foer": 3.02, "L": 210.00, "c_efter": 1.66},
-        "Oksekød": {"Tc": -1.70, "c_foer": 3.25, "L": 194.00, "c_efter": 2.24},
-        "Svin": {"Tc": -1.70, "c_foer": 3.30, "L": 195.00, "c_efter": 2.05},
-        "Vildt": {"Tc": -1.80, "c_foer": 3.20, "L": 200.00, "c_efter": 2.00},
-        "Kål": {"Tc": -0.80, "c_foer": 3.90, "L": 305.00, "c_efter": 1.90},
-        "Blomkål": {"Tc": -0.80, "c_foer": 3.85, "L": 300.00, "c_efter": 1.90},
-        "Asparges": {"Tc": -0.90, "c_foer": 3.95, "L": 310.00, "c_efter": 1.95},
-        "Græskar": {"Tc": -0.80, "c_foer": 3.75, "L": 290.00, "c_efter": 1.85},
-        "Kartofler": {"Tc": -0.60, "c_foer": 3.60, "L": 275.00, "c_efter": 1.80},
-    }
+    df = pd.read_excel("varmemaengder_komplet.xlsx")
+        
+    df.columns = df.columns.str.strip()  # Fjern eventuelle førende/efterfølgende mellemrum
+
+    kolonner_tal = [
+        "Maks. frysepunkt (°C)",
+        "Varmekapacitet før frysning [kJ/(kg·K)]",
+        "Varmekapacitet efter frysning [kJ/(kg·K)]",
+        "Frysevarme Δh_ls [kJ/kg]",
+    ]
+
+    for col in kolonner_tal:
+        df[col] = (
+            df[col]
+            .astype(str)
+            .str.replace(",", ".", regex=False)
+            .replace("nan", "")
+        )
+        df[col] = pd.to_number(df[col], errors="coerce")
+
+    df = df[df["produkt"].notna()]
+    df = [df[df["produkt"].astype(str).str.strip() != ""]]
+
+    produkter = {}
+    for _, row in df.iterrows():
+        navn = str(row["produkt"]).strip()
+        produkter[navn] = {
+            "Tc": 0.0 if pd.isna(row["Maks. frysepunkt (°C)"]) 
+            else float(row["Maks. frysepunkt (°C)"]),
+            "c_foer": 0.0 if pd.isna(row["Varmekapacitet før frysning [kJ/(kg·K)]"]) 
+            else float(row["Varmekapacitet før frysning [kJ/(kg·K)]"]),
+            "L": 0.0 if pd.isna(row["Frysevarme Δh_ls [kJ/kg]"]) 
+            else float(row["Frysevarme Δh_ls [kJ/kg]"]),
+            "c_efter": 0.0 if pd.isna(row["Varmekapacitet efter frysning [kJ/(kg·K)]"]) 
+            else float(row["Varmekapacitet efter frysning [kJ/(kg·K)]"]),
+        }
 
     produktnavne = list(produkter.keys())
 
