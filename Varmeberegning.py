@@ -10,40 +10,65 @@ def show():
    
     # -------------------------
     df = pd.read_excel("varmemaengder_komplet.xlsx")
-        
-    df.columns = df.columns.str.strip()  # Fjern eventuelle førende/efterfølgende mellemrum
 
+    # Rens kolonnenavne
+    df.columns = (
+        df.columns.astype(str)
+        .str.strip()
+        .str.replace("\n", " ", regex=False)
+        .str.replace("  ", " ", regex=False)
+    )
+
+    # Midlertidig debug - kan fjernes senere
+    st.write("Kolonner fundet i Excel:", df.columns.tolist())
+
+    # Brug de faktiske kolonnenavne fra Excel-filen
+    kolonne_map = {
+        "produkt": "Produkt",
+        "tc": "Maks. frysepunkt (°C)",
+        "c_foer": "Varmekapacitet før frysning [kJ/(kg·K)]",
+        "c_efter": "Varmekapacitet efter frysning [kJ/(kg·K)]",
+        "L": "Frysevarme Δh_ls [kJ/kg]",
+    }
+
+    # Tjek at alle nødvendige kolonner findes
+    mangler = [v for v in kolonne_map.values() if v not in df.columns]
+    if mangler:
+        st.error(f"Disse kolonner mangler i Excel-filen: {mangler}")
+        st.stop()
+
+    # Rens tal-kolonner
     kolonner_tal = [
-        "Maks. frysepunkt (°C)",
-        "Varmekapacitet før frysning [kJ/(kg·K)]",
-        "Varmekapacitet efter frysning [kJ/(kg·K)]",
-        "Frysevarme Δh_ls [kJ/kg]",
+        kolonne_map["tc"],
+        kolonne_map["c_foer"],
+        kolonne_map["c_efter"],
+        kolonne_map["L"],
     ]
 
     for col in kolonner_tal:
         df[col] = (
             df[col]
             .astype(str)
+            .str.strip()
             .str.replace(",", ".", regex=False)
             .replace("nan", "")
+            .replace("", None)
         )
-        df[col] = pd.to_number(df[col], errors="coerce")
+        df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    df = df[df["produkt"].notna()]
-    df = [df[df["produkt"].astype(str).str.strip() != ""]]
+    # Fjern tomme rækker
+    df = df[df[kolonne_map["produkt"]].notna()]
+    df = df[df[kolonne_map["produkt"]].astype(str).str.strip() != ""]
 
+    # Byg produkter
     produkter = {}
     for _, row in df.iterrows():
-        navn = str(row["produkt"]).strip()
+        navn = str(row[kolonne_map["produkt"]]).strip()
         produkter[navn] = {
-            "Tc": 0.0 if pd.isna(row["Maks. frysepunkt (°C)"]) 
-            else float(row["Maks. frysepunkt (°C)"]),
-            "c_foer": 0.0 if pd.isna(row["Varmekapacitet før frysning [kJ/(kg·K)]"]) 
-            else float(row["Varmekapacitet før frysning [kJ/(kg·K)]"]),
-            "L": 0.0 if pd.isna(row["Frysevarme Δh_ls [kJ/kg]"]) 
-            else float(row["Frysevarme Δh_ls [kJ/kg]"]),
-            "c_efter": 0.0 if pd.isna(row["Varmekapacitet efter frysning [kJ/(kg·K)]"]) 
-            else float(row["Varmekapacitet efter frysning [kJ/(kg·K)]"]),
+            "Tc": 0.0 if pd.isna(row[kolonne_map["tc"]]) else float(row[kolonne_map["tc"]]),
+            "c_foer": 0.0 if pd.isna(row[kolonne_map["c_foer"]]) else float(row[kolonne_map["c_foer"]]),
+            "L": 0.0 if pd.isna(row[kolonne_map["L"]]) else float(row[kolonne_map["L"]]),
+            "c_efter": 0.0 if pd.isna(row[kolonne_map["c_efter"]]) else float(row[kolonne_map["c_efter"]]),
         }
 
     produktnavne = list(produkter.keys())
