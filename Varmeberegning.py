@@ -2,14 +2,21 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 def show():
     st.title("Varmeberegning for madvare")
-   
+
     # -------------------------
     # Produktdata
-   
     # -------------------------
-    df = pd.read_excel("varmemaengder_komplet.xlsx", header=2)
+    try:
+        df = pd.read_excel("varmemaengder_komplet.xlsx", header=2)
+    except FileNotFoundError:
+        st.error("Filen 'varmemaengder_komplet.xlsx' blev ikke fundet.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Kunne ikke læse Excel-filen: {e}")
+        st.stop()
 
     # Rens kolonnenavne
     df.columns = (
@@ -78,6 +85,11 @@ def show():
         }
 
     produktnavne = list(produkter.keys())
+
+    if not produktnavne:
+        st.error("Der blev ikke fundet nogen gyldige produkter i Excel-filen.")
+        st.stop()
+
     # -------------------------
     # Hjælpefunktion til at opdatere data pr. produkt
     # -------------------------
@@ -101,6 +113,9 @@ def show():
             st.session_state[f"L_{i}"] = produkter[standard]["L"]
             st.session_state[f"c_efter_{i}"] = produkter[standard]["c_efter"]
 
+        if f"masse_{i}" not in st.session_state:
+            st.session_state[f"masse_{i}"] = 0.0
+
     # -------------------------
     # Indstillinger
     # -------------------------
@@ -111,14 +126,14 @@ def show():
             "Antal produkter",
             [1, 2, 3],
             index=0,
-            key="antal_produkter"
+            key="antal_produkter",
         )
 
     with top2:
         manuel_redigering = st.checkbox(
             "Redigér produktdata manuelt",
             value=False,
-            key="manuel_redigering"
+            key="manuel_redigering",
         )
 
     # -------------------------
@@ -134,7 +149,7 @@ def show():
             value=0.00,
             step=0.01,
             format="%.4f",
-            key="T_varm"
+            key="T_varm",
         )
 
     with col_t2:
@@ -143,7 +158,7 @@ def show():
             value=-18.00,
             step=0.01,
             format="%.4f",
-            key="T_fryserum"
+            key="T_fryserum",
         )
 
     # -------------------------
@@ -160,7 +175,7 @@ def show():
                 produktnavne,
                 key=f"produkt_{i}",
                 on_change=opdater_produktdata,
-                args=(i,)
+                args=(i,),
             )
 
             if not manuel_redigering:
@@ -177,10 +192,10 @@ def show():
                 masse = st.number_input(
                     f"Masse [kg] - produkt {i+1}",
                     min_value=0.00,
-                    value=0.00,
+                    value=st.session_state[f"masse_{i}"],
                     step=0.01,
                     format="%.4f",
-                    key=f"masse_{i}"
+                    key=f"masse_{i}",
                 )
 
                 Tc = st.number_input(
@@ -188,7 +203,7 @@ def show():
                     step=0.01,
                     format="%.4f",
                     key=f"Tc_{i}",
-                    disabled=not manuel_redigering
+                    disabled=not manuel_redigering,
                 )
 
             with c2:
@@ -197,7 +212,7 @@ def show():
                     step=0.01,
                     format="%.4f",
                     key=f"c_foer_{i}",
-                    disabled=not manuel_redigering
+                    disabled=not manuel_redigering,
                 )
 
                 L = st.number_input(
@@ -205,7 +220,7 @@ def show():
                     step=0.01,
                     format="%.4f",
                     key=f"L_{i}",
-                    disabled=not manuel_redigering
+                    disabled=not manuel_redigering,
                 )
 
             c3, _ = st.columns(2)
@@ -216,7 +231,7 @@ def show():
                     step=0.01,
                     format="%.4f",
                     key=f"c_efter_{i}",
-                    disabled=not manuel_redigering
+                    disabled=not manuel_redigering,
                 )
 
             dT1 = T_varm - Tc
@@ -238,18 +253,20 @@ def show():
                 st.write(f"ΔT1 = **{dT1:.2f} K**")
                 st.write(f"ΔT3 = **{dT3:.2f} K**")
 
-            produkt_resultater.append({
-                "Produkt": st.session_state[f"produkt_{i}"],
-                "Masse [kg]": masse,
-                "Tc [°C]": Tc,
-                "c_før [kJ/kgK]": c_foer,
-                "L [kJ/kg]": L,
-                "c_efter [kJ/kgK]": c_efter,
-                "Q1 [kJ]": Q1,
-                "Q2 [kJ]": Q2,
-                "Q3 [kJ]": Q3,
-                "Q_total [kJ]": Q_total,
-            })
+            produkt_resultater.append(
+                {
+                    "Produkt": st.session_state[f"produkt_{i}"],
+                    "Masse [kg]": masse,
+                    "Tc [°C]": Tc,
+                    "c_før [kJ/kgK]": c_foer,
+                    "L [kJ/kg]": L,
+                    "c_efter [kJ/kgK]": c_efter,
+                    "Q1 [kJ]": Q1,
+                    "Q2 [kJ]": Q2,
+                    "Q3 [kJ]": Q3,
+                    "Q_total [kJ]": Q_total,
+                }
+            )
 
     # -------------------------
     # Samlet resultat
@@ -260,11 +277,14 @@ def show():
     sum_Q_total = sum(r["Q_total [kJ]"] for r in produkt_resultater)
     sum_masse = sum(r["Masse [kg]"] for r in produkt_resultater)
 
+    # -------------------------
+    # Graf
+    # -------------------------
     st.subheader("Temperatur–Energi graf")
 
     fig, ax = plt.subplots()
 
-    max_energy = 0
+    max_energy = 0.0
     min_temp = T_varm
     max_temp = T_varm
 
@@ -289,10 +309,14 @@ def show():
     ax.set_xlim(-energy_margin, max_energy + energy_margin)
     ax.set_ylim(min_temp - temp_margin, max_temp + temp_margin)
 
-    ax.legend()
+    if produkt_resultater:
+        ax.legend()
 
     st.pyplot(fig)
 
+    # -------------------------
+    # Metrics
+    # -------------------------
     s1, s2, s3, s4, s5 = st.columns(5)
     s1.metric("Masse total [kg]", f"{sum_masse:.2f}")
     s2.metric("Q1 total [kJ]", f"{sum_Q1:.2f}")
@@ -306,18 +330,20 @@ def show():
     with st.expander("Vis samlet tabel", expanded=False):
         tabel_data = []
         for r in produkt_resultater:
-            tabel_data.append({
-                "Produkt": r["Produkt"],
-                "Masse [kg]": f'{r["Masse [kg]"]:.2f}',
-                "Tc [°C]": f'{r["Tc [°C]"]:.2f}',
-                "c_før [kJ/kgK]": f'{r["c_før [kJ/kgK]"]:.2f}',
-                "L [kJ/kg]": f'{r["L [kJ/kg]"]:.2f}',
-                "c_efter [kJ/kgK]": f'{r["c_efter [kJ/kgK]"]:.2f}',
-                "Q1 [kJ]": f'{r["Q1 [kJ]"]:.2f}',
-                "Q2 [kJ]": f'{r["Q2 [kJ]"]:.2f}',
-                "Q3 [kJ]": f'{r["Q3 [kJ]"]:.2f}',
-                "Q_total [kJ]": f'{r["Q_total [kJ]"]:.2f}',
-            })
+            tabel_data.append(
+                {
+                    "Produkt": r["Produkt"],
+                    "Masse [kg]": f'{r["Masse [kg]"]:.2f}',
+                    "Tc [°C]": f'{r["Tc [°C]"]:.2f}',
+                    "c_før [kJ/kgK]": f'{r["c_før [kJ/kgK]"]:.2f}',
+                    "L [kJ/kg]": f'{r["L [kJ/kg]"]:.2f}',
+                    "c_efter [kJ/kgK]": f'{r["c_efter [kJ/kgK]"]:.2f}',
+                    "Q1 [kJ]": f'{r["Q1 [kJ]"]:.2f}',
+                    "Q2 [kJ]": f'{r["Q2 [kJ]"]:.2f}',
+                    "Q3 [kJ]": f'{r["Q3 [kJ]"]:.2f}',
+                    "Q_total [kJ]": f'{r["Q_total [kJ]"]:.2f}',
+                }
+            )
 
         st.table(tabel_data)
 
@@ -329,3 +355,6 @@ def show():
         st.latex(r"Q_2 = m \cdot L")
         st.latex(r"Q_3 = m \cdot c_{\mathrm{efter}} \cdot |T_{\mathrm{fryserum}} - T_c|")
         st.latex(r"Q_{\mathrm{total}} = Q_1 + Q_2 + Q_3")
+
+
+show()
