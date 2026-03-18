@@ -19,10 +19,11 @@ def show():
         .str.replace("  ", " ", regex=False)
     )
 
-    # Midlertidig debug - kan fjernes senere
+    st.write(df.columns.tolist())
+
+    # Midlertidig debug
     st.write("Kolonner fundet i Excel:", df.columns.tolist())
 
-    # Brug de faktiske kolonnenavne fra Excel-filen
     kolonne_map = {
         "produkt": "Produkt",
         "tc": "Maks. frysepunkt (°C)",
@@ -31,7 +32,6 @@ def show():
         "L": "Frysevarme Δh_ls [kJ/kg]",
     }
 
-    # Tjek at alle nødvendige kolonner findes
     mangler = [v for v in kolonne_map.values() if v not in df.columns]
     if mangler:
         st.error(f"Disse kolonner mangler i Excel-filen: {mangler}")
@@ -56,11 +56,22 @@ def show():
         )
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Fjern tomme rækker
+    # Fjern tomme produktrækker
     df = df[df[kolonne_map["produkt"]].notna()]
     df = df[df[kolonne_map["produkt"]].astype(str).str.strip() != ""]
 
-    # Byg produkter
+    # Fjern sektionsrækker
+    ugyldige_rækker = [
+        "Kød og kødprodukter",
+        "Fisk m.m.",
+        "Grønsager",
+        "Frugt",
+        "Mejeriprodukter",
+        "Forskellige levnedsmidler",
+    ]
+    df = df[~df[kolonne_map["produkt"]].isin(ugyldige_rækker)]
+
+    # Byg produkter-dictionary
     produkter = {}
     for _, row in df.iterrows():
         navn = str(row[kolonne_map["produkt"]]).strip()
@@ -72,7 +83,6 @@ def show():
         }
 
     produktnavne = list(produkter.keys())
-
     # -------------------------
     # Hjælpefunktion til at opdatere data pr. produkt
     # -------------------------
