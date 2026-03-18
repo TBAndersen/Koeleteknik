@@ -133,7 +133,7 @@ def show():
             "T_varm [°C]",
             value=0.00,
             step=0.01,
-            format="%.2f",
+            format="%.4f",
             key="T_varm"
         )
 
@@ -142,7 +142,7 @@ def show():
             "T_fryserum [°C]",
             value=-18.00,
             step=0.01,
-            format="%.2f",
+            format="%.4f",
             key="T_fryserum"
         )
 
@@ -179,14 +179,14 @@ def show():
                     min_value=0.00,
                     value=0.00,
                     step=0.01,
-                    format="%.2f",
+                    format="%.4f",
                     key=f"masse_{i}"
                 )
 
                 Tc = st.number_input(
                     f"T_frysetemperatur [°C] - produkt {i+1}",
                     step=0.01,
-                    format="%.2f",
+                    format="%.4f",
                     key=f"Tc_{i}",
                     disabled=not manuel_redigering
                 )
@@ -195,7 +195,7 @@ def show():
                 c_foer = st.number_input(
                     f"c før frys [kJ/kgK] - produkt {i+1}",
                     step=0.01,
-                    format="%.2f",
+                    format="%.4f",
                     key=f"c_foer_{i}",
                     disabled=not manuel_redigering
                 )
@@ -203,7 +203,7 @@ def show():
                 L = st.number_input(
                     f"Latent varme L [kJ/kg] - produkt {i+1}",
                     step=0.01,
-                    format="%.2f",
+                    format="%.4f",
                     key=f"L_{i}",
                     disabled=not manuel_redigering
                 )
@@ -214,7 +214,7 @@ def show():
                 c_efter = st.number_input(
                     f"c efter frys [kJ/kgK] - produkt {i+1}",
                     step=0.01,
-                    format="%.2f",
+                    format="%.4f",
                     key=f"c_efter_{i}",
                     disabled=not manuel_redigering
                 )
@@ -283,8 +283,8 @@ def show():
     ax.set_title("Temperatur vs Energi under nedfrysning")
     ax.grid(True)
 
-    energy_margin = max(1.0, max_energy * 0.10)
-    temp_margin = max(1.0, (max_temp - min_temp) * 0.10)
+    energy_margin = max(0.5, max_energy * 0.10)
+    temp_margin = max(0.5, (max_temp - min_temp) * 0.10)
 
     ax.set_xlim(-energy_margin, max_energy + energy_margin)
     ax.set_ylim(min_temp - temp_margin, max_temp + temp_margin)

@@ -47,7 +47,7 @@ def show():
                 "U [W/m²K]",
                 min_value=0.000,
                 value=0.000,
-                step=0.010,
+                step=0.001,
                 key=f"U_{section_key}",
             )
             return U
@@ -116,10 +116,10 @@ def show():
         l = st.number_input("l [m]", min_value=0.0, value=0.0, step=0.1, key="l_gulv")
         b = st.number_input("b [m]", min_value=0.0, value=0.0, step=0.1, key="b_gulv")
         A = l * b
-        st.write(f"A = **{A:.3f} m²**")
+        st.write(f"A = **{A:.4f} m²**")
 
         r = result_row("Gulv", dT, U, A)
-        st.write(f"φ = **{r['φ [W]']:.3f} W**")
+        st.write(f"φ = **{r['φ [W]']:.4f} W**")
 
         rows.append(r)
         A_total += A
@@ -136,10 +136,10 @@ def show():
         l = st.number_input("l [m]", min_value=0.0, value=0.0, step=0.1, key="l_loft")
         b = st.number_input("b [m]", min_value=0.0, value=0.0, step=0.1, key="b_loft")
         A = l * b
-        st.write(f"A = **{A:.3f} m²**")
+        st.write(f"A = **{A:.4f} m²**")
 
         r = result_row("Loft", dT, U, A)
-        st.write(f"φ = **{r['φ [W]']:.3f} W**")
+        st.write(f"φ = **{r['φ [W]']:.4f} W**")
 
         rows.append(r)
         A_total += A
@@ -169,10 +169,10 @@ def show():
             st.warning("Der kan maks være 4 vægge i alt.")
 
         A = (int(n_long) * l * h) + (int(n_short) * b * h)
-        st.write(f"A = **{A:.3f} m²** (for {n_total} vægge)")
+        st.write(f"A = **{A:.4f} m²** (for {n_total} vægge)")
 
         r = result_row("Vægge", dT, U, A)
-        st.write(f"φ = **{r['φ [W]']:.3f} W**")
+        st.write(f"φ = **{r['φ [W]']:.4f} W**")
 
         rows.append(r)
         A_total += A
@@ -183,9 +183,9 @@ def show():
     # -------------------------
     st.subheader("Samlet resultat")
     c1, c2, c3 = st.columns(3)
-    c1.metric("A_total [m²]", f"{A_total:.3f}")
-    c2.metric("φ_total [W]", f"{phi_total:.3f}")
-    c3.metric("φ_total [kW]", f"{phi_total/1000:.3f}")
+    c1.metric("A_total [m²]", f"{A_total:.4f}")
+    c2.metric("φ_total [W]", f"{phi_total:.4f}")
+    c3.metric("φ_total [kW]", f"{phi_total/1000:.4f}")
 
     with st.expander("Vis tabel"):
         st.dataframe(rows, use_container_width=True)
