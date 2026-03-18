@@ -19,8 +19,6 @@ def show():
         .str.replace("  ", " ", regex=False)
     )
 
-    st.write(df.columns.tolist())
-
     kolonne_map = {
         "produkt": "Produkt",
         "tc": "Maks. frysepunkt (°C)",
