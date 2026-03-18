@@ -21,9 +21,6 @@ def show():
 
     st.write(df.columns.tolist())
 
-    # Midlertidig debug
-    st.write("Kolonner fundet i Excel:", df.columns.tolist())
-
     kolonne_map = {
         "produkt": "Produkt",
         "tc": "Maks. frysepunkt (°C)",
