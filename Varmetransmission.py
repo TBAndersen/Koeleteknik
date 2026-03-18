@@ -34,7 +34,7 @@ def show():
 
 
     def u_block(section_key: str) -> float:
-        st.markdown("### U-værdi")
+        st.markdown("##### U-værdi")
         u_mode = st.radio(
             "Vælg metode",
             ["U er oplyst", "Beregn U fra lag (materialer)"],
@@ -45,9 +45,10 @@ def show():
         if u_mode == "U er oplyst":
             U = st.number_input(
                 "U [W/m²K]",
-                min_value=0.000,
-                value=0.000,
-                step=0.001,
+                min_value=0.00000,
+                value=0.00000,
+                step=0.00100,
+                format="%.6f",
                 key=f"U_{section_key}",
             )
             return U
@@ -59,10 +60,11 @@ def show():
             min_value=1,
             value=1,
             step=1,
+            format="%6f",
             key=f"n_{section_key}",
         )
 
-        R_total = 0.000
+        R_total = 0.00000
         cols = st.columns(int(n_layers))
 
         for j in range(int(n_layers)):
@@ -71,18 +73,18 @@ def show():
 
                 s = st.number_input(
                     "s [m]",
-                    min_value=0.000,
-                    value=0.000,
-                    step=0.001,
-                    format="%.4f",
+                    min_value=0.00000,
+                    value=0.00000,
+                    step=0.00100,
+                    format="%.6f",
                     key=f"s_{section_key}_{j}",
                 )
                 lam = st.number_input(
                     "λ [W/m·K]",
-                    min_value=0.000,
-                    value=0.000,
-                    step=0.001,
-                    format="%.4f",
+                    min_value=0.00000,
+                    value=0.00000,
+                    step=0.00100,
+                    format="%.6f",
                     key=f"lam_{section_key}_{j}",
                 )
 
@@ -169,10 +171,10 @@ def show():
             st.warning("Der kan maks være 4 vægge i alt.")
 
         A = (int(n_long) * l * h) + (int(n_short) * b * h)
-        st.write(f"A = **{A:.4f} m²** (for {n_total} vægge)")
+        st.write(f"A = **{A:.6f} m²** (for {n_total} vægge)")
 
         r = result_row("Vægge", dT, U, A)
-        st.write(f"φ = **{r['φ [W]']:.4f} W**")
+        st.write(f"φ = **{r['φ [W]']:.6f} W**")
 
         rows.append(r)
         A_total += A
@@ -183,9 +185,9 @@ def show():
     # -------------------------
     st.subheader("Samlet resultat")
     c1, c2, c3 = st.columns(3)
-    c1.metric("A_total [m²]", f"{A_total:.4f}")
-    c2.metric("φ_total [W]", f"{phi_total:.4f}")
-    c3.metric("φ_total [kW]", f"{phi_total/1000:.4f}")
+    c1.metric("A_total [m²]", f"{A_total:.6f}")
+    c2.metric("φ_total [W]", f"{phi_total:.6f}")
+    c3.metric("φ_total [kW]", f"{phi_total/1000:.6f}")
 
     with st.expander("Vis tabel"):
         st.dataframe(rows, use_container_width=True)
