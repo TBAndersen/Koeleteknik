@@ -9,7 +9,7 @@ def show():
     # Produktdata
    
     # -------------------------
-    df = pd.read_excel("varmemaengder_komplet.xlsx")
+    df = pd.read_excel("varmemaengder_komplet.xlsx", header=2)
 
     # Rens kolonnenavne
     df.columns = (
