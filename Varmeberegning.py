@@ -248,7 +248,7 @@ def show():
                 Q1 = masse * c_foer * dT1
                 Q2 = masse * L
                 Q3 = masse * c_efter * dT3
-                
+
             Q_total = Q1 + Q2 + Q3
 
             st.markdown("### Resultat for produkt")
@@ -298,8 +298,14 @@ def show():
     max_temp = T_varm
 
     for r in produkt_resultater:
-        T = [T_varm, r["Tc [°C]"], r["Tc [°C]"], T_fryserum]
-        E = [0, r["Q1 [kJ]"], r["Q1 [kJ]"] + r["Q2 [kJ]"], r["Q_total [kJ]"]]
+
+        if T_fryserum > r["Tc [°C]"]:
+            T = [T_varm, T_fryserum]
+            E = [0, r["Q1 [KJ)]"]]
+
+        else:
+            T = [T_varm, r["Tc [°C]"], r["Tc [°C]"], T_fryserum]
+            E = [0, r["Q1 [kJ]"], r["Q1 [kJ]"] + r["Q2 [kJ]"], r["Q_total [kJ]"]]
 
         ax.plot(E, T, marker="o", label=r["Produkt"])
 
