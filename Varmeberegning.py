@@ -301,7 +301,7 @@ def show():
 
         if T_fryserum > r["Tc [°C]"]:
             T = [T_varm, T_fryserum]
-            E = [0, r["Q1 [KJ)]"]]
+            E = [0, r["Q1 [KJ]"]]
 
         else:
             T = [T_varm, r["Tc [°C]"], r["Tc [°C]"], T_fryserum]
