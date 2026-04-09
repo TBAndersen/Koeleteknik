@@ -233,13 +233,22 @@ def show():
                     key=f"c_efter_{i}",
                     disabled=not manuel_redigering,
                 )
+            if T_fryserum > Tc:
+                dT1 = T_varm - Tc
+                dT3 = 0.0
 
-            dT1 = T_varm - Tc
-            dT3 = abs(T_fryserum - Tc)
+                Q1 = masse * c_foer * dT1
+                Q2 = 0.0
+                Q3 = 0.0
 
-            Q1 = masse * c_foer * dT1
-            Q2 = masse * L
-            Q3 = masse * c_efter * dT3
+            else:
+                dT1 = T_varm - Tc
+                dT3 = abs(T_fryserum - Tc)
+
+                Q1 = masse * c_foer * dT1
+                Q2 = masse * L
+                Q3 = masse * c_efter * dT3
+                
             Q_total = Q1 + Q2 + Q3
 
             st.markdown("### Resultat for produkt")
